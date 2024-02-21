@@ -10,9 +10,10 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 from torchvision.transforms import ToPILImage, ToTensor
 
-from .detector import predict_detector
 from .data_uncertainty import *
+from .detector import predict_detector
 from .utils import *
+
 
 # Base class for HCMs
 class Hardness_Base:
@@ -92,9 +93,9 @@ class Cleanlab_Class(Hardness_Base):
         self.probs = probs.detach().cpu().numpy()
 
     def compute_scores(self):
-        from cleanlab.filter import find_label_issues
-        from cleanlab.rank import order_label_issues, get_label_quality_scores
         from cleanlab.count import num_label_issues
+        from cleanlab.filter import find_label_issues
+        from cleanlab.rank import get_label_quality_scores, order_label_issues
 
         scores = get_label_quality_scores(
             labels=self.targets,
@@ -238,8 +239,8 @@ class GRAND_Class(Hardness_Base):
         self.device = device
 
     def compute_scores(self):
-        from functorch import make_functional_with_buffers, vmap, grad
         import torch.nn.functional as F
+        from functorch import grad, make_functional_with_buffers, vmap
 
         fmodel, params, buffers = make_functional_with_buffers(self.net)
 
@@ -351,6 +352,7 @@ class Prototypicality_Class(Hardness_Base):
 
     def updates(self, net, device):
         from collections import defaultdict
+
         import torch.nn.functional as F
 
         # Initialize accumulators for embeddings and counts for each label

@@ -1,18 +1,15 @@
-from typing import Union, List, Tuple, Dict, Set
+from typing import Dict, List, Set, Tuple, Union
 
 import numpy as np
-from matplotlib import colors
+from matplotlib import colors, pyplot
 from matplotlib.axes import SubplotBase
-from matplotlib.colorbar import ColorbarBase, Colorbar
+from matplotlib.colorbar import Colorbar, ColorbarBase
 from matplotlib.colors import ListedColormap
-from matplotlib import pyplot
 from pandas import DataFrame, Series
 from seaborn import heatmap
 
 
-def sign_array(
-        p_values: Union[List, np.ndarray],
-        alpha: float = 0.05) -> np.ndarray:
+def sign_array(p_values: Union[List, np.ndarray], alpha: float = 0.05) -> np.ndarray:
     """Significance array.
 
     Converts an array with p values to a significance array where
@@ -53,9 +50,8 @@ def sign_array(
 
 
 def sign_table(
-        p_values: Union[List, np.ndarray, DataFrame],
-        lower: bool = True,
-        upper: bool = True) -> Union[DataFrame, np.ndarray]:
+    p_values: Union[List, np.ndarray, DataFrame], lower: bool = True, upper: bool = True
+) -> Union[DataFrame, np.ndarray]:
     """Significance table.
 
     Returns table that can be used in a publication. P values are replaced
@@ -91,9 +87,11 @@ def sign_table(
     if not any([lower, upper]):
         raise ValueError("Either lower or upper triangle must be returned")
 
-    pv = DataFrame(p_values, copy=True) \
-        if not isinstance(p_values, DataFrame) \
+    pv = (
+        DataFrame(p_values, copy=True)
+        if not isinstance(p_values, DataFrame)
         else p_values.copy()
+    )
 
     ns = pv > 0.05
     three = (pv < 0.001) & (pv >= 0)
@@ -101,29 +99,30 @@ def sign_table(
     one = (pv < 0.05) & (pv >= 0.01)
 
     pv = pv.astype(str)
-    pv[ns] = 'NS'
-    pv[three] = '***'
-    pv[two] = '**'
-    pv[one] = '*'
+    pv[ns] = "NS"
+    pv[three] = "***"
+    pv[two] = "**"
+    pv[one] = "*"
 
-    np.fill_diagonal(pv.values, '-')
+    np.fill_diagonal(pv.values, "-")
     if not lower:
-        pv.values[np.tril_indices(pv.shape[0], -1)] = ''
+        pv.values[np.tril_indices(pv.shape[0], -1)] = ""
     elif not upper:
-        pv.values[np.triu_indices(pv.shape[0], 1)] = ''
+        pv.values[np.triu_indices(pv.shape[0], 1)] = ""
 
     return pv
 
 
 def sign_plot(
-        x: Union[List, np.ndarray, DataFrame],
-        g: Union[List, np.ndarray] = None,
-        flat: bool = False,
-        labels: bool = True,
-        cmap: List = None,
-        cbar_ax_bbox: List = None,
-        ax: SubplotBase = None,
-        **kwargs) -> Union[SubplotBase, Tuple[SubplotBase, Colorbar]]:
+    x: Union[List, np.ndarray, DataFrame],
+    g: Union[List, np.ndarray] = None,
+    flat: bool = False,
+    labels: bool = True,
+    cmap: List = None,
+    cbar_ax_bbox: List = None,
+    ax: SubplotBase = None,
+    **kwargs
+) -> Union[SubplotBase, Tuple[SubplotBase, Colorbar]]:
     """Significance plot, a heatmap of p values (based on Seaborn).
 
     Parameters
@@ -190,7 +189,7 @@ def sign_plot(
                       [ 1, 0, 1]])
     >>> ph.sign_plot(x, flat = True)
     """
-    for key in ['cbar', 'vmin', 'vmax', 'center']:
+    for key in ["cbar", "vmin", "vmax", "center"]:
         if key in kwargs:
             del kwargs[key]
 
@@ -210,18 +209,19 @@ def sign_plot(
 
     if not cmap and flat:
         # format: diagonal, non-significant, significant
-        cmap = ['1', '#fbd7d4', '#1a9641']
+        cmap = ["1", "#fbd7d4", "#1a9641"]
     elif not cmap and not flat:
         # format: diagonal, non-significant, p<0.001, p<0.01, p<0.05
-        cmap = ['1', '#fbd7d4', '#005a32', '#238b45', '#a1d99b']
+        cmap = ["1", "#fbd7d4", "#005a32", "#238b45", "#a1d99b"]
 
     if flat:
         np.fill_diagonal(df.values, -1)
-        hax = heatmap(df, vmin=-1, vmax=1, cmap=ListedColormap(cmap),
-                      cbar=False, ax=ax, **kwargs)
+        hax = heatmap(
+            df, vmin=-1, vmax=1, cmap=ListedColormap(cmap), cbar=False, ax=ax, **kwargs
+        )
         if not labels:
-            hax.set_xlabel('')
-            hax.set_ylabel('')
+            hax.set_xlabel("")
+            hax.set_ylabel("")
         return hax
 
     else:
@@ -236,20 +236,33 @@ def sign_plot(
             raise ValueError("Cmap list must contain 5 items")
 
         hax = heatmap(
-            df, vmin=-1, vmax=3, cmap=ListedColormap(cmap), center=1,
-            cbar=False, ax=ax, **kwargs)
+            df,
+            vmin=-1,
+            vmax=3,
+            cmap=ListedColormap(cmap),
+            center=1,
+            cbar=False,
+            ax=ax,
+            **kwargs,
+        )
         if not labels:
-            hax.set_xlabel('')
-            hax.set_ylabel('')
+            hax.set_xlabel("")
+            hax.set_ylabel("")
 
         cbar_ax = hax.figure.add_axes(cbar_ax_bbox or [0.95, 0.35, 0.04, 0.3])
-        cbar = ColorbarBase(cbar_ax, cmap=(ListedColormap(cmap[2:] + [cmap[1]])), norm=colors.NoNorm(),
-                            boundaries=[0, 1, 2, 3, 4])
-        cbar.set_ticks(list(np.linspace(0, 3, 4)), labels=[
-                       'p < 0.001', 'p < 0.01', 'p < 0.05', 'NS'])
+        cbar = ColorbarBase(
+            cbar_ax,
+            cmap=(ListedColormap(cmap[2:] + [cmap[1]])),
+            norm=colors.NoNorm(),
+            boundaries=[0, 1, 2, 3, 4],
+        )
+        cbar.set_ticks(
+            list(np.linspace(0, 3, 4)),
+            labels=["p < 0.001", "p < 0.01", "p < 0.05", "NS"],
+        )
 
         cbar.outline.set_linewidth(1)
-        cbar.outline.set_edgecolor('0.5')
+        cbar.outline.set_edgecolor("0.5")
         cbar.ax.tick_params(size=0)
 
         return hax, cbar
@@ -299,11 +312,12 @@ def _find_maximal_cliques(adj_matrix: DataFrame) -> List[Set]:
 
 
 def _bron_kerbosch(
-        current_clique: Set,
-        candidates: Set,
-        visited: Set,
-        adj_matrix: DataFrame,
-        result: List[Set]) -> None:
+    current_clique: Set,
+    candidates: Set,
+    visited: Set,
+    adj_matrix: DataFrame,
+    result: List[Set],
+) -> None:
     """Recursive algorithm to find the maximal fully connected subgraphs.
 
     See [1]_ for more information.
@@ -351,17 +365,18 @@ def _bron_kerbosch(
 
 
 def critical_difference_diagram(
-        ranks: Union[dict, Series],
-        sig_matrix: DataFrame,
-        *,
-        ax: SubplotBase = None,
-        label_fmt_left: str = '{label} ({rank:.2g})',
-        label_fmt_right: str = '({rank:.2g}) {label}',
-        label_props: dict = None,
-        marker_props: dict = None,
-        elbow_props: dict = None,
-        crossbar_props: dict = None,
-        text_h_margin: float = 0.01) -> Dict[str, list]:
+    ranks: Union[dict, Series],
+    sig_matrix: DataFrame,
+    *,
+    ax: SubplotBase = None,
+    label_fmt_left: str = "{label} ({rank:.2g})",
+    label_fmt_right: str = "({rank:.2g}) {label}",
+    label_props: dict = None,
+    marker_props: dict = None,
+    elbow_props: dict = None,
+    crossbar_props: dict = None,
+    text_h_margin: float = 0.01
+) -> Dict[str, list]:
     """Plot a Critical Difference diagram from ranks and post-hoc results.
 
     The diagram arranges the average ranks of multiple groups on the x axis
@@ -448,16 +463,20 @@ def critical_difference_diagram(
     elbow_props = elbow_props or {}
     marker_props = {"zorder": 3, **(marker_props or {})}
     label_props = {"va": "center", **(label_props or {})}
-    crossbar_props = {"color": "k", "zorder": 3,
-                      "linewidth": 2, **(crossbar_props or {})}
+    crossbar_props = {
+        "color": "k",
+        "zorder": 3,
+        "linewidth": 2,
+        **(crossbar_props or {}),
+    }
 
     ax = ax or pyplot.gca()
     ax.yaxis.set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.xaxis.set_ticks_position('top')
-    ax.spines['top'].set_position('zero')
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.xaxis.set_ticks_position("top")
+    ax.spines["top"].set_position("zero")
 
     # lists of artists to be returned
     markers = []
@@ -481,8 +500,7 @@ def critical_difference_diagram(
 
     # Sort by lowest rank and filter single-valued sets
     crossbar_sets = sorted(
-        (x for x in crossbar_sets if len(x) > 1),
-        key=lambda x: ranks[list(x)].min()
+        (x for x in crossbar_sets if len(x) > 1), key=lambda x: ranks[list(x)].min()
     )
 
     # Create stacking of crossbars: for each level, try to fit the crossbar,
@@ -492,20 +510,22 @@ def critical_difference_diagram(
     for bar in crossbar_sets:
         for level, bars_in_level in enumerate(crossbar_levels):
             if not any(bool(bar & bar_in_lvl) for bar_in_lvl in bars_in_level):
-                ypos = -level-1
+                ypos = -level - 1
                 bars_in_level.append(bar)
                 break
         else:
             ypos = -len(crossbar_levels) - 1
             crossbar_levels.append([bar])
 
-        crossbars.append(ax.plot(
-            # Adding a separate line between each pair enables showing a
-            # marker over each elbow with crossbar_props={'marker': 'o'}.
-            [ranks[i] for i in bar],
-            [ypos] * len(bar),
-            **crossbar_props,
-        ))
+        crossbars.append(
+            ax.plot(
+                # Adding a separate line between each pair enables showing a
+                # marker over each elbow with crossbar_props={'marker': 'o'}.
+                [ranks[i] for i in bar],
+                [ypos] * len(bar),
+                **crossbar_props,
+            )
+        )
 
     lowest_crossbar_ypos = -len(crossbar_levels)
 
@@ -520,9 +540,7 @@ def critical_difference_diagram(
             )
             elbows.append(elbow)
             curr_color = elbow.get_color()
-            markers.append(
-                ax.scatter(rank, 0, **{"color": curr_color, **marker_props})
-            )
+            markers.append(ax.scatter(rank, 0, **{"color": curr_color, **marker_props}))
             labels.append(
                 ax.text(
                     xpos,

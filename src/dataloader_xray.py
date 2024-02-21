@@ -40,10 +40,11 @@ class PerturbedDataset(Dataset):
         self.rule_matrix = rule_matrix
 
         from collections import Counter
+
         labels = []
         for idx in range(len(self.dataset)):
-                label = self.dataset[idx]['lab']
-                labels.append(label[0])
+            label = self.dataset[idx]["lab"]
+            labels.append(label[0])
 
         self.targets = labels
 
@@ -93,6 +94,7 @@ class PerturbedDataset(Dataset):
         methods. It updates self.dataset with the perturbed data.
         """
         import random
+
         shifts = []
         self.severity_ids = np.zeros(len(self.dataset))
 
@@ -110,22 +112,22 @@ class PerturbedDataset(Dataset):
 
             perturbed_data = []
             for idx in range(len(self.dataset)):
-                data, label = self.dataset[idx]['img'], self.dataset[idx]['lab']
+                data, label = self.dataset[idx]["img"], self.dataset[idx]["lab"]
 
                 if idx in self.flag_ids:
                     # Get the original image
-                    data, label = self.dataset[idx]['img'], self.dataset[idx]['lab']
+                    data, label = self.dataset[idx]["img"], self.dataset[idx]["lab"]
                     data = torch.from_numpy(data)
                     if self.perturbation_method == "id_covariate":
                         chosen_index = random.randint(0, len(id_buckets) - 1)
                         val = id_buckets[chosen_index]
                         std_dev = val
-                        self.severity_ids[idx] = chosen_index+1
+                        self.severity_ids[idx] = chosen_index + 1
                     elif self.perturbation_method == "ood_covariate":
                         chosen_index = random.randint(0, len(ood_buckets) - 1)
                         val = ood_buckets[chosen_index]
                         std_dev = val
-                        self.severity_ids[idx] = chosen_index+1
+                        self.severity_ids[idx] = chosen_index + 1
                     # Add Gaussian noise with a standard deviation of 10%/50% of the pixel intensity range
                     noise = torch.randn(data.shape) * (std_dev * torch.max(data))
                     noisy_data = data + noise
@@ -152,7 +154,6 @@ class PerturbedDataset(Dataset):
             zoom_shift_buckets = [2, 5, 10]
             crop_shift_buckets = [5, 10, 20]
 
-
             self.flag_ids = np.random.choice(
                 len(self.dataset), int(len(self.dataset) * self.p), replace=False
             )
@@ -174,23 +175,23 @@ class PerturbedDataset(Dataset):
             total = len(self.flag_ids)
             n = 0
             for idx in range(len(self.dataset)):
-                data, label = self.dataset[idx]['img'], self.dataset[idx]['lab']
+                data, label = self.dataset[idx]["img"], self.dataset[idx]["lab"]
                 from tqdm import tqdm
 
                 if idx in self.flag_ids:
                     # Get the original image
-                    data, label = self.dataset[idx]['img'], self.dataset[idx]['lab']
+                    data, label = self.dataset[idx]["img"], self.dataset[idx]["lab"]
                     data = torch.from_numpy(data)
                     if self.perturbation_method == "zoom_shift":
                         chosen_index = random.randint(0, len(zoom_shift_buckets) - 1)
                         val = zoom_shift_buckets[chosen_index]
                         noisy_data = zoom_in(data, zoom_factor=val)
-                        self.severity_ids[idx] = chosen_index+1
+                        self.severity_ids[idx] = chosen_index + 1
                     elif self.perturbation_method == "crop_shift":
                         chosen_index = random.randint(0, len(crop_shift_buckets) - 1)
                         val = crop_shift_buckets[chosen_index]
                         noisy_data = shift_image(data, shift_amount=val)
-                        self.severity_ids[idx] = chosen_index+1
+                        self.severity_ids[idx] = chosen_index + 1
                     elif self.perturbation_method == "far_ood":
                         if data.shape[0] == 1:
                             noisy_data = replace_with_cifar10(data, cifar10_dataset)
@@ -212,20 +213,20 @@ class PerturbedDataset(Dataset):
             self.dataset = torch.utils.data.TensorDataset(flat_data, labels)
 
         if self.perturbation_method == "domain_shift":
-            domain_shift_bucket = [0.25,0.5,1]
+            domain_shift_bucket = [0.25, 0.5, 1]
             # Change texture of image
             self.flag_ids = np.random.choice(
                 len(self.dataset), int(len(self.dataset) * self.p), replace=False
             )
             perturbed_data = []
             for idx in range(len(self.dataset)):
-                data, label = self.dataset[idx]['img'], self.dataset[idx]['lab']
+                data, label = self.dataset[idx]["img"], self.dataset[idx]["lab"]
                 data = torch.from_numpy(data)
                 if idx in self.flag_ids:
                     chosen_index = random.randint(0, len(domain_shift_bucket) - 1)
                     val = domain_shift_bucket[chosen_index]
                     std_dev = val
-                    self.severity_ids[idx] = chosen_index+1
+                    self.severity_ids[idx] = chosen_index + 1
                     # COVARIATE SHIFT: Add Gaussian noise with a standard deviation of 10%/50% of the pixel intensity range
 
                     noise = torch.randn(data.shape) * (std_dev * torch.max(data))
@@ -286,7 +287,7 @@ class PerturbedDataset(Dataset):
                     # Add the original image to the dataset
                     if len(data.size()) == 4:
                         data = data.squeeze(0)
-                    perturbed_data.append(data = torch.from_numpy(data))
+                    perturbed_data.append(data=torch.from_numpy(data))
 
             # Convert the list of tensors to a flat tensor and create a TensorDataset
             flat_data = torch.stack(perturbed_data)
@@ -303,7 +304,7 @@ class PerturbedDataset(Dataset):
         is being returned.
         """
         mislabels = []
-        print('pre = ', self.targets[0:10])
+        print("pre = ", self.targets[0:10])
 
         if self.perturbation_method == "uniform":
             self.flag_ids = np.random.choice(
@@ -311,7 +312,7 @@ class PerturbedDataset(Dataset):
             )
 
             self.flag_ids = np.array(self.flag_ids, dtype=int)
-            #self.targets = np.array(self.targets, dtype=int)
+            # self.targets = np.array(self.targets, dtype=int)
 
             new_labels = np.random.randint(
                 0, len(np.unique(self.targets)), size=self.flag_ids.shape
@@ -319,14 +320,11 @@ class PerturbedDataset(Dataset):
             try:
                 self.targets[self.flag_ids] = new_labels
             except:
-                corrupt_labels = torch.tensor(self.targets).to(
-                    torch.long
-                 )
+                corrupt_labels = torch.tensor(self.targets).to(torch.long)
                 corrupt_labels[self.flag_ids] = torch.from_numpy(new_labels).to(
                     torch.long
                 )
                 self.targets = corrupt_labels.tolist()
-
 
         elif self.perturbation_method == "asymmetric":
             labels = np.array(self.targets)
@@ -341,14 +339,11 @@ class PerturbedDataset(Dataset):
             try:
                 self.targets[self.flag_ids] = new_labels
             except:
-                corrupt_labels = torch.tensor(self.targets).to(
-                    torch.long
-                 )
+                corrupt_labels = torch.tensor(self.targets).to(torch.long)
                 corrupt_labels[self.flag_ids] = torch.from_numpy(new_labels).to(
                     torch.long
                 )
                 self.targets = corrupt_labels.tolist()
-
 
         elif self.perturbation_method == "instance":
 
@@ -371,7 +366,6 @@ class PerturbedDataset(Dataset):
                 )
                 self.targets = corrupt_labels.tolist()
 
-
         elif self.perturbation_method == "adjacent":
             labels = np.array(self.targets)
             n_classes = len(np.unique(labels))
@@ -391,15 +385,15 @@ class PerturbedDataset(Dataset):
 
         perturbed_data = []
         for idx in range(len(self.dataset)):
-              data, label = self.dataset[idx]['img'], self.dataset[idx]['lab']
-   
-              perturbed_data.append(torch.from_numpy(data))
+            data, label = self.dataset[idx]["img"], self.dataset[idx]["lab"]
+
+            perturbed_data.append(torch.from_numpy(data))
 
         # Convert the list of tensors to a flat tensor and create a TensorDataset
         flat_data = torch.stack(perturbed_data)
         labels = self.targets
         labels = torch.tensor(labels)
-        print('post = ', self.targets[0:10])
+        print("post = ", self.targets[0:10])
         self.dataset = torch.utils.data.TensorDataset(flat_data, labels)
 
 
@@ -570,5 +564,4 @@ class MultiFormatDataLoader:
         return flag_array
 
     def get_severity_ids(self):
-      return self.severity_ids
-
+        return self.severity_ids

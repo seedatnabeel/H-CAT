@@ -301,7 +301,6 @@ def ResNet18():
     return ResNet(BasicBlock, [2, 2, 2, 2])
 
 
-
 class MLP(nn.Module):  # old module4
     def __init__(self, input_size=12, num_units=256, nonlin=F.relu, nlabels=2):
         super(MLP, self).__init__()

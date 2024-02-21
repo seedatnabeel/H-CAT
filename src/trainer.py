@@ -172,9 +172,9 @@ class PyTorchTrainer:
                     )
 
                 outputs = outputs.float()  # Ensure the outputs are float
-                observed_label = observed_label.long() # Ensure the labels are long
+                observed_label = observed_label.long()  # Ensure the labels are long
                 loss = self.criterion(outputs, observed_label)
-              
+
                 loss.backward()
                 self.optimizer.step()
 
@@ -273,7 +273,7 @@ class PyTorchTrainer:
             probs = torch.nn.functional.softmax(logits, dim=1)
 
         logits = logits.float()  # Ensure the outputs are float
-        targets = targets.long() # Ensure the labels are long
+        targets = targets.long()  # Ensure the labels are long
         return logits, targets, probs, indices
 
     def get_hardness_methods(self):

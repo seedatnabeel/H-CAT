@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+
 # Class that implements both Data-IQ and Data Maps
 class DataIQ_MAPS_Torch:
     def __init__(self, X=None, y=None, dataloader=None, sparse_labels: bool = False):

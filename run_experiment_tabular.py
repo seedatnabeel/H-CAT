@@ -1,31 +1,34 @@
 import argparse
-from src.utils import seed_everything
+import io
+import os
+import pickle
+import tempfile
+import time
+
+import numpy as np
+import openml
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision import datasets, transforms
 import wandb
-import os
 import yaml
-import time
-import pickle
-import io
-import tempfile
-from src.trainer import PyTorchTrainer
+from torchvision import datasets, transforms
+
 from src.dataloader import MultiFormatDataLoader
-from src.models import *
 from src.evaluator import Evaluator
-import openml
-import pandas as pd
-import numpy as np
+from src.models import *
+from src.trainer import PyTorchTrainer
+from src.utils import seed_everything
+
 
 def main(args):
     # Load the WANDB YAML file
-    with open('./wandb.yaml') as file:
+    with open("./wandb.yaml") as file:
         wandb_data = yaml.load(file, Loader=yaml.FullLoader)
 
-    os.environ["WANDB_API_KEY"] = wandb_data['wandb_key'] 
-    wandb_entity = wandb_data['wandb_entity'] 
+    os.environ["WANDB_API_KEY"] = wandb_data["wandb_key"]
+    wandb_entity = wandb_data["wandb_entity"]
 
     total_runs = args.total_runs
     hardness = args.hardness
@@ -35,17 +38,15 @@ def main(args):
     seed = args.seed
     p = args.prop
 
-    assert dataset in ['diabetes', 'eye', 'cover', 'jannis'], "Invalid dataset!"
+    assert dataset in ["diabetes", "eye", "cover", "jannis"], "Invalid dataset!"
 
-   
     for i in range(total_runs):
 
         ####################
         #
-        # SET UP EXPERIMENT 
+        # SET UP EXPERIMENT
         #
         ####################
-
 
         print(f"Running {i+1}/{total_runs} for {p}")
         seed_everything(seed)
@@ -58,8 +59,7 @@ def main(args):
             entity=wandb_entity,
         )
 
-
-        if hardness =="instance":
+        if hardness == "instance":
             if dataset == "cover":
                 rule_matrix = {4: [5], 1: [0], 0: [6], 6: [0], 2: [3], 5: [2], 3: [2]}
             if dataset == "diabetes":
@@ -70,22 +70,19 @@ def main(args):
         else:
             rule_matrix = None
 
-  
-
-
         # diabetes - 4541 (3)
         # eye movement 1044 - (3) https://www.openml.org/search?type=data&sort=runs&id=1044&status=active
         # cover 1596 (7) https://www.openml.org/search?type=data&sort=runs&id=1596&status=active
         # https://huggingface.co/datasets/inria-soda/tabular-benchmark
         # 41168 - Jannis (4)
-        print('loading dataset...')
-        if dataset=='diabetes':
+        print("loading dataset...")
+        if dataset == "diabetes":
             id = 4541
-        elif dataset=='eye':
+        elif dataset == "eye":
             id = 1044
-        elif dataset=='cover':
+        elif dataset == "cover":
             id = 1596
-        elif dataset=='jannis':
+        elif dataset == "jannis":
             id = 41168
         else:
             raise ValueError("Invalid dataset!")
@@ -100,13 +97,13 @@ def main(args):
 
         print(df.shape)
 
-        if df.shape[0]>50000:
-          df = df.sample(50000, random_state=0)
+        if df.shape[0] > 50000:
+            df = df.sample(50000, random_state=0)
 
         total_samples = len(df)
         num_classes = np.unique(y)
 
-        # Set device to use            
+        # Set device to use
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         ####################
@@ -114,7 +111,7 @@ def main(args):
         # DATALOADER MODULE
         #
         ####################
-        print('loading dataloader...')
+        print("loading dataloader...")
         metadata = {
             "p": p,
             "hardness": hardness,
@@ -126,57 +123,57 @@ def main(args):
 
         wandb.log(metadata)
 
-        X = df.drop(columns='y').to_numpy()
-        y = df['y'].values
+        X = df.drop(columns="y").to_numpy()
+        y = df["y"].values
 
-        if hardness =="atypical":
+        if hardness == "atypical":
             if dataset == "cover":
                 feat = "Elevation"
-               
+
             if dataset == "diabetes":
                 feat = "num_medications"
-                             
+
             if dataset == "eye":
-                feat = 'timePrtctg'
-            
+                feat = "timePrtctg"
+
             marginal = df[feat].values
             index = df.columns.get_loc(feat)
             atypical_marginal = (marginal, index)
         else:
             atypical_marginal = None
 
-        data = (X,y)
+        data = (X, y)
 
         # Allows importing data in multiple formats
-        dataloader_class = MultiFormatDataLoader(data=data,
-                                                target_column=None,
-                                                data_type='numpy',
-                                                data_modality = 'tabular',
-                                                batch_size=64,
-                                                shuffle=True,
-                                                num_workers=0,
-                                                transform=None,
-                                                image_transform=None,
-                                                perturbation_method=hardness,
-                                                p=p,
-                                                rule_matrix=rule_matrix,
-                                                atypical_marginal=atypical_marginal,
+        dataloader_class = MultiFormatDataLoader(
+            data=data,
+            target_column=None,
+            data_type="numpy",
+            data_modality="tabular",
+            batch_size=64,
+            shuffle=True,
+            num_workers=0,
+            transform=None,
+            image_transform=None,
+            perturbation_method=hardness,
+            p=p,
+            rule_matrix=rule_matrix,
+            atypical_marginal=atypical_marginal,
         )
-
 
         dataloader, dataloader_unshuffled = dataloader_class.get_dataloader()
         flag_ids = dataloader_class.get_flag_ids()
-        
+
         ####################
         #
         # TRAINER MODULE
         #
         ####################
 
-        # Instantiate the neural network 
+        # Instantiate the neural network
         model = MLP(input_size=X.shape[1], nlabels=len(np.unique(y))).to(device)
 
-        characterization_methods=[
+        characterization_methods = [
             "aum",
             "data_uncert",
             "el2n",
@@ -194,20 +191,22 @@ def main(args):
         optimizer = optim.Adam(model.parameters(), lr=0.001)
         num_classes = len(np.unique(y))
         # Instantiate the PyTorchTrainer class
-        print('training_model...')
-        trainer = PyTorchTrainer(model=model,
-                                    criterion=criterion,
-                                    optimizer=optimizer,
-                                    lr=0.001,
-                                    epochs=epochs,
-                                    total_samples=total_samples,
-                                    num_classes=num_classes,
-                                    device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
-                                    characterization_methods= characterization_methods)
+        print("training_model...")
+        trainer = PyTorchTrainer(
+            model=model,
+            criterion=criterion,
+            optimizer=optimizer,
+            lr=0.001,
+            epochs=epochs,
+            total_samples=total_samples,
+            num_classes=num_classes,
+            device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+            characterization_methods=characterization_methods,
+        )
 
         # Train the model
         trainer.fit(dataloader, dataloader_unshuffled)
-        print('computing...')
+        print("computing...")
         hardness_dict = trainer.get_hardness_methods()
 
         ####################
@@ -246,10 +245,11 @@ def main(args):
 
         # add sleep in case of machine latency
         time.sleep(30)
-        
+
         wandb.finish()
 
-        seed+=1
+        seed += 1
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Description of your program.")
@@ -258,9 +258,14 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=0, help="seed")
     parser.add_argument("--prop", type=float, default=0.1, help="prop")
     parser.add_argument("--epochs", type=int, default=10, help="Epochs")
-    parser.add_argument("--hardness", type=str, default = "uniform",
-                        help="hardness type")
-    parser.add_argument("--dataset", type=str, default="mnist", choices=["mnist", "cifar", "diabetes", "cover", "eye", "jannis"], help="Dataset")
+    parser.add_argument("--hardness", type=str, default="uniform", help="hardness type")
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default="mnist",
+        choices=["mnist", "cifar", "diabetes", "cover", "eye", "jannis"],
+        help="Dataset",
+    )
     parser.add_argument("--model_name", type=str, default="MLP", help="Model name")
 
     args = parser.parse_args()

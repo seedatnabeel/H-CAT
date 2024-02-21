@@ -218,9 +218,13 @@ def asymmetric_mislabeling(labels, p, n_classes):
         original_label = original_labels[idx]
 
         try:
-          flipped_label = np.random.choice(n_classes, 1, p=noise_matrices[original_label])
+            flipped_label = np.random.choice(
+                n_classes, 1, p=noise_matrices[original_label]
+            )
         except:
-          flipped_label = np.random.choice(n_classes, 1, p=noise_matrices[int(original_label)])
+            flipped_label = np.random.choice(
+                n_classes, 1, p=noise_matrices[int(original_label)]
+            )
         flipped_labels[i] = flipped_label
 
     return np.array(flip_indices), np.array(flipped_labels)

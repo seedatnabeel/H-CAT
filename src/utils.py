@@ -13,7 +13,9 @@ def seed_everything(seed: int):
     Args:
       seed (int): The seed parameter
     """
-    import random, os
+    import os
+    import random
+
     import numpy as np
     import torch
 

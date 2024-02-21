@@ -16,7 +16,15 @@ from .perturbations import *
 
 
 class PerturbedDataset(Dataset):
-    def __init__(self, dataset, perturbation_method="uniform", p=0.1, rule_matrix=None, images=True, atypical_marginal = []):
+    def __init__(
+        self,
+        dataset,
+        perturbation_method="uniform",
+        p=0.1,
+        rule_matrix=None,
+        images=True,
+        atypical_marginal=[],
+    ):
         """
         This function initializes an object with a dataset, perturbation method, perturbation
         probability, and rule matrix, and generates mislabels or shifts based on the perturbation
@@ -50,7 +58,7 @@ class PerturbedDataset(Dataset):
             "zoom_shift",
             "crop_shift",
             "far_ood",
-            "atypical"
+            "atypical",
         ]:
             self.perturbs = self._generate_shifts()
 
@@ -104,9 +112,9 @@ class PerturbedDataset(Dataset):
                         std_dev = 0.1
                     elif self.perturbation_method == "ood_covariate":
                         std_dev = 0.5
-                    
+
                     if not self.images:
-                        noise = np.random.normal(0, std_dev, size=data.shape) 
+                        noise = np.random.normal(0, std_dev, size=data.shape)
                         # Add the noise to the data
                         noisy_data = data + noise
                     else:
@@ -125,13 +133,13 @@ class PerturbedDataset(Dataset):
             # Convert the list of tensors to a flat tensor and create a TensorDataset
             if not self.images:
                 perturbed_data = np.array(perturbed_data)
-                
-                # Convert each to Tensor
-                tensor_data = [torch.from_numpy(arr) for arr in perturbed_data]  
 
-                # Stack tuple of Tensors 
+                # Convert each to Tensor
+                tensor_data = [torch.from_numpy(arr) for arr in perturbed_data]
+
+                # Stack tuple of Tensors
                 flat_data = torch.stack(tuple(tensor_data))
-                #perturbed_data = torch.tensor(perturbed_data)
+                # perturbed_data = torch.tensor(perturbed_data)
             else:
                 # Convert the list of tensors to a flat tensor and create a TensorDataset
                 flat_data = torch.stack(perturbed_data)
@@ -179,24 +187,28 @@ class PerturbedDataset(Dataset):
                         noisy_data = shift_image(data, shift_amount=10)
                     elif self.perturbation_method == "far_ood":
                         if self.images:
-                            if data.shape[0]==1:
+                            if data.shape[0] == 1:
                                 noisy_data = replace_with_cifar10(data, cifar10_dataset)
-                            elif data.shape[0]==3:
+                            elif data.shape[0] == 3:
                                 noisy_data = replace_with_mnist(data, mnist_dataset)
 
                         else:
                             # Get indices of 0s and 1s
                             num_to_flip = 2
                             try:
-                                zero_indices = np.where(data == 0)[0]  
-                                flip_zeros = np.random.choice(zero_indices, size=num_to_flip)
+                                zero_indices = np.where(data == 0)[0]
+                                flip_zeros = np.random.choice(
+                                    zero_indices, size=num_to_flip
+                                )
                                 data[flip_zeros] = 1
                             except:
                                 pass
-                            
+
                             try:
                                 one_indices = np.where(data == 1)[0]
-                                flip_ones = np.random.choice(one_indices, size=num_to_flip)
+                                flip_ones = np.random.choice(
+                                    one_indices, size=num_to_flip
+                                )
                                 data[flip_ones] = 0
                             except:
                                 pass
@@ -205,8 +217,8 @@ class PerturbedDataset(Dataset):
                     elif self.perturbation_method == "atypical":
                         if not self.images:
                             marginal, feat_idx = self.atypical_marginal
-        
-                            ns = int(0.01*len(marginal))
+
+                            ns = int(0.01 * len(marginal))
 
                             # Sort the numpy array
                             sorted_arr = np.sort(marginal)
@@ -214,16 +226,15 @@ class PerturbedDataset(Dataset):
                             # Get the tail of the sorted array. For example, let's take the last 3 elements.
                             tail_elements = sorted_arr[-ns:]
 
-                            
                             # Sample from the tail. Here, sampling 2 elements without replacement.
                             sampled_val = np.random.choice(tail_elements, size=1)[0]
                             data[feat_idx] = sampled_val
                             noisy_data = data
                         else:
                             # Throw error that atypical is not supported for images --- need to use zoom_shift or crop_shift
-                            raise ValueError("Atypical is not supported for images. Please use zoom_shift or crop_shift instead.")
-
-
+                            raise ValueError(
+                                "Atypical is not supported for images. Please use zoom_shift or crop_shift instead."
+                            )
 
                     # Add the perturbed image and its label to the list
                     perturbed_data.append(noisy_data)
@@ -236,16 +247,16 @@ class PerturbedDataset(Dataset):
             # Convert the list of tensors to a flat tensor and create a TensorDataset
             if not self.images:
                 perturbed_data = np.array(perturbed_data)
-                
-                # Convert each to Tensor
-                tensor_data = [torch.from_numpy(arr) for arr in perturbed_data]  
 
-                # Stack tuple of Tensors 
+                # Convert each to Tensor
+                tensor_data = [torch.from_numpy(arr) for arr in perturbed_data]
+
+                # Stack tuple of Tensors
                 flat_data = torch.stack(tuple(tensor_data))
-                #perturbed_data = torch.tensor(perturbed_data)
+                # perturbed_data = torch.tensor(perturbed_data)
             else:
                 flat_data = torch.stack(perturbed_data)
-            
+
             labels = self.dataset.targets
             labels = torch.tensor(labels)
             self.dataset = torch.utils.data.TensorDataset(flat_data, labels)
@@ -429,9 +440,8 @@ class CustomDataset(Dataset):
         self.transform = transform
         self.image_data = image_data
 
-        if image_data==False:
-          self.targets = data.iloc[:,-1]
-
+        if image_data == False:
+            self.targets = data.iloc[:, -1]
 
     def __len__(self):
         return len(self.data)
@@ -453,7 +463,6 @@ class CustomDataset(Dataset):
         row = self.data.iloc[idx, :-1].to_numpy()
         target = self.data.iloc[idx, -1]
 
-
         if self.transform:
             row, target = self.transform(row, target)
 
@@ -468,7 +477,7 @@ class MultiFormatDataLoader:
         data,
         target_column,
         data_type="torch_dataset",
-        data_modality = "image",
+        data_modality="image",
         batch_size=32,
         shuffle=True,
         num_workers=0,
@@ -477,7 +486,7 @@ class MultiFormatDataLoader:
         perturbation_method="uniform",
         p=0.1,
         rule_matrix=None,
-        atypical_marginal = [],
+        atypical_marginal=[],
     ):
 
         if data_type == "torch_dataset":
@@ -487,7 +496,7 @@ class MultiFormatDataLoader:
             self.target_column = target_column
 
             # for not pytorch datasets
-            if data_type == "raw_image": 
+            if data_type == "raw_image":
                 if image_transform is None:
                     image_transform = transforms.Compose(
                         [
@@ -507,11 +516,10 @@ class MultiFormatDataLoader:
                     self.data, target_column, transform=transform
                 )
 
-        if data_modality == 'image':
-          images=True
+        if data_modality == "image":
+            images = True
         else:
-          images=False
-
+            images = False
 
         self.rule_matrix = rule_matrix
         self.perturbed_dataset = PerturbedDataset(
@@ -520,7 +528,7 @@ class MultiFormatDataLoader:
             p=p,
             rule_matrix=self.rule_matrix,
             images=images,
-            atypical_marginal = atypical_marginal,
+            atypical_marginal=atypical_marginal,
         )
         self.flag_ids = self.perturbed_dataset.get_flag_ids()
         self.dataloader = DataLoader(
@@ -605,4 +613,3 @@ class MultiFormatDataLoader:
                 flag_array[i] = 1
 
         return flag_array
-
