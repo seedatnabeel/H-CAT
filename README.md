@@ -2,6 +2,7 @@
 
 ![GitHub top language](https://img.shields.io/github/languages/top/seedatnabeel/H-CAT)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![arXiv](https://img.shields.io/badge/arXiv--b31b1b.svg)]()
 
 ---
 
@@ -10,8 +11,11 @@
 Data and hardness characterization are crucial in Data-Centric AI. 
 
 Many methods have been developed for this purpose. H-CAT provides a unified interface for 13 state-of-the-art methods making them easy to use and/or evaluate. 
-
+s
 We also include a benchmark capability which allows these hardness characterization methods (HCMs) to be evaluated on 9 different types of hardness.
+
+![image](pipeline.png "H-CAT framework")
+
 
 ## 🚀 Installation
 
@@ -41,7 +45,7 @@ To install H-CAT, follow the steps below:
     python -m ipykernel install --user --name=hcat_env
     ```
 
-## 🛠️ Usage
+## 🛠️ Usage of H-CAT
 
 There are two ways to get started with H-CAT:
 
@@ -97,6 +101,7 @@ Results from the benchmarking can be visualized using `analysis_plots.ipynb` (al
 - "zoom_shift": Zoom shift  - type of Atypical for images
 - "crop_shift": Crop shift  - type of Atypical for images
 - "atypical": Marginal atypicality (for tabular data ONLY)
+
 
 
 ## 🔎 Logging

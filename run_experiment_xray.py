@@ -59,8 +59,10 @@ def main(args):
         rule_matrix = None
 
         if dataset == "xray":
-
-            imgpath = "/content/images/images-224"
+            # Paper: https://pubs.rsna.org/doi/10.1148/radiol.2019191293
+            # Dataset link: https://academictorrents.com/details/e615d3aebce373f1dc8bd9d11064da55bdadede0
+            # Usage: https://mlmed.org/torchxrayvision/datasets.html#torchxrayvision.datasets.NIH_Google_Dataset
+            imgpath = "./data/images/images-224"
             transform = torchvision.transforms.Compose([xrv.datasets.XRayResizer(32)])
             train_dataset = xrv.datasets.NIH_Google_Dataset(
                 imgpath,
