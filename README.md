@@ -10,9 +10,9 @@
 
 Data and hardness characterization are crucial in Data-Centric AI. 
 
-Many methods have been developed for this purpose. H-CAT provides a unified interface for 13 state-of-the-art methods making them easy to use and/or evaluate. 
-s
-We also include a benchmark capability which allows these hardness characterization methods (HCMs) to be evaluated on 9 different types of hardness.
+Many methods have been developed for this purpose. H-CAT is a unified framework and API interface for 13 state-of-the-art hardness and data characterization methods --- making them easy to use and/or evaluate. 
+
+We also include a benchmark capability that allows these hardness characterization methods (HCMs) to be evaluated on 9 different types of hardness.
 
 ![image](pipeline.png "H-CAT framework")
 
