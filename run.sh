@@ -15,6 +15,8 @@
 # - "zoom_shift": Zoom shift  - type of Atypical for images
 # - "crop_shift": Crop shift  - type of Atypical for images
 
+# --fix_seed for conistency: where the seed is fixed and we assess model randomness
+
 # Set the parameterizable arguments
 total_runs=3
 epochs=10

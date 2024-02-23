@@ -1,0 +1,3 @@
+Datasets can be placed in this folder for the H-CAT framework to access.
+
+e.g. X-RAY dataset: https://academictorrents.com/details/e615d3aebce373f1dc8bd9d11064da55bdadede0
