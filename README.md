@@ -16,6 +16,25 @@ We also include a benchmark capability that allows these hardness characterizati
 
 ![image](pipeline.png "H-CAT framework")
 
+## ✅ Supported Hardness characterization methods
+
+| Method | Usage | Description | Reference |
+| --- | --- | --- | --- |
+| Area Under the Margin (AUM) | 'aum' | Characterizes data examples based on the margin of a classifier – i.e. the difference between the logit values of the correct class and the next class. | [AUM Paper](https://arxiv.org/abs/2001.10528) |
+| Confident Learning |  'cleanlab' |  Confident learning estimates the joint distribution of noisy and true labels — characterizing data as easy and hard for mislabeling. | [Confident Learning Paper](https://arxiv.org/pdf/1911.00068.pdf) |
+| Conf Agree | 'conf_agree' | Agreement measures the agreement of predictions on the same example. | [Conf Agree Paper](https://arxiv.org/pdf/1910.13427.pdf) |
+| Data IQ | 'data_uncert' | Data-IQ computes the aleatoric uncertainty and confidence to characterize the data into easy, ambiguous and hard examples. | [Data-IQ Paper](https://arxiv.org/abs/2210.13043) |
+| Data Maps | 'data_uncert' | Data Maps focuses on measuring variability (epistemic uncertainty) and confidence to characterize the data into easy, ambiguous and hard examples. | [Data-Maps Paper](https://arxiv.org/abs/2009.10795) |
+| Gradient Normed (GraNd) | 'grand' |GraNd measures the gradient norm to characterize data. | [GraNd Paper](https://arxiv.org/abs/2107.07075) |
+| Error L2-Norm (EL2N) | 'el2n' | EL2N calculates the L2 norm of error over training in order to characterize data for computational purposes. | [EL2N Paper](https://arxiv.org/abs/2107.07075) |
+| Forgetting | 'forgetting' | Forgetting scores analyze example transitions through training. i.e., the time a sample correctly learned at one epoch is then forgotten. | [Forgetting Paper](https://arxiv.org/abs/1812.05159) |
+| Small Loss | 'loss' | Small Loss characterizes data based on sample-level loss magnitudes. | [Small Loss Paper](https://arxiv.org/abs/2106.00445) |
+| Prototypicalilty | 'prototypicality' | Prototypicality calculates the latent space clustering distance of the sample to the class centroid as the metric to characterize data. | [Prototypicalilty Paper](https://arxiv.org/abs/2206.14486) |
+| Variance of Gradients (VOG) | 'vog' |VoG (Variance of gradients) estimates the variance of gradients for each sample over training | [VOG Paper](https://arxiv.org/abs/2008.11600) |
+| Active Learning Guided by Local Sensitivity and Hardness (ALLSH) | 'allsh' | ALLSH computes the KL divergence of softmax outputs between original and augmented samples to characterize data. | [ALLSH Paper](https://arxiv.org/abs/2205.04980) |
+| Detector | 'detector' | Detects hard samples directly on the training dynamics via a trained detection model | [Detector Paper](https://arxiv.org/abs/2212.09321) |
+
+**Adding new methods**: New methods can be added via the base class ``Hardness_Base`` in ``src/hardness.py``
 
 ## 🚀 Installation
 
@@ -101,6 +120,8 @@ Results from the benchmarking can be visualized using `analysis_plots.ipynb` (al
 - "zoom_shift": Zoom shift  - type of Atypical for images
 - "crop_shift": Crop shift  - type of Atypical for images
 - "atypical": Marginal atypicality (for tabular data ONLY)
+
+
 
 
 
