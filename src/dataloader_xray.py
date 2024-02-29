@@ -435,6 +435,7 @@ class MultiFormatDataLoader:
         data,
         target_column,
         data_type="csv",
+        data_modality="image",
         batch_size=32,
         shuffle=True,
         num_workers=0,
